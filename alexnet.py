@@ -3,18 +3,18 @@ import pandas as pd
 import cv2
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix , f1_score , recall_score , precision_score , accuracy_score
 from keras.utils import to_categorical
-from sklearn.model_selection import train_test_split
+
 from keras.models import  load_model , Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import  BatchNormalization , Concatenate , Conv2D , Dense , Dropout , Flatten , GlobalAveragePooling2D , Input , Lambda, ZeroPadding2D , MaxPooling2D
 
-path_train = r'C:\Users\ASUS\Desktop\computer-vision-project\emnist-balanced-train.csv'
-path_test = r'C:\Users\ASUS\Desktop\computer-vision-project\emnist-balanced-test.csv'
-list_paths = [path_train, path_test]
+path_train = r'C:\Users\ASUS\Desktop\project-computer\emnist-balanced-train.csv'
+path_test = r'C:\Users\ASUS\Desktop\project-computer\emnist-balanced-test.csv'
 
-path_map = r'C:\Users\ASUS\Desktop\computer-vision-project\emnist-balanced-mapping.txt'
+list_paths = [path_train, path_test]
+path_map = r'C:\Users\ASUS\Desktop\project-computer\emnist-balanced-mapping.txt'
 label_map = pd.read_csv(path_map, delimiter = ' ', index_col=0, header=None, squeeze=True) 
 
 label_dictionary = {}
@@ -56,7 +56,6 @@ def one_hot_encoding(y_set,no_classes):
     return y_set
 
 
-
 def define_model_alexnet():
     n_outputs = 47 
     input = Input(shape  = (HEIGHT, WIDTH , 1))
@@ -83,7 +82,7 @@ def define_model_alexnet():
 
     #fifth layer
     x = Conv2D(filters= 256 , kernel_size= 3, strides=1 , name = 'conv5', activation = 'relu')(x)
-   
+    
     x = Flatten()(x)
 
     x = Dense(4096, activation = 'relu', name = 'fc6')(x)
@@ -106,9 +105,9 @@ def confusion_matrix_plot(y_pred,y_test):
 
 
 if __name__ == "__main__":
-    ist_datasets, X_set, y_set = extract_dataset(list_paths)
+    list_datasets, X_set, y_set = extract_dataset(list_paths)
 
-    number_classes = y_set[0].nunique()
+    number_classes = y_set[0].nunique() # 47 classes
 
     #flip the image
     X_set = flip_rotate(X_set)
@@ -116,26 +115,30 @@ if __name__ == "__main__":
 
     X_train = X_set[0].reshape(-1,HEIGHT,WIDTH, 1)
     X_test = X_set[1].reshape(-1,HEIGHT,WIDTH , 1)
-
+    print(X_train.shape)
+    print(X_test.shape)
     y_train = y_set[0]
     y_test = y_set[1]
-
+    print(y_train.shape)
+    print(y_test.shape)
     #create the model
-    model = define_model_alexnet()
+    """model = define_model_alexnet()
     model.compile(loss = 'categorical_crossentropy' , optimizer = 'adam' , metrics = ['accuracy'])
     callbacks = [EarlyStopping(monitor='val_loss', patience=3),
                 ModelCheckpoint(filepath='best_model.h5', monitor='val_loss', save_best_only=True)]
     #train the model
-    train = model.fit(X_train, y_train, epochs=20, validation_data=(X_test, y_test), callbacks=callbacks)
+    train = model.fit(X_train, y_train, epochs=20, validation_data=(X_test, y_test), callbacks=callbacks)"""
 
+    model = load_model('best_model.h5')
     #evaluating the model
     scores = model.evaluate(X_test,y_test, verbose = 0)
    
     print("Accuracy: %.2f%%"%(scores[1]*100))
-    """model = load_model('alex_net.h5')
+    
     y_pred = model.predict(X_test)
     y_pred = np.argmax(y_pred, axis = 1)
-    confusion_matrix_plot(y_pred,y_test)"""
+    y_test = np.argmax(y_test, axis = 1)
+    confusion_matrix_plot(y_pred,y_test)
 
 
 """dataset_train = pd.read_csv(path_train, header = None)
