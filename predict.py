@@ -21,9 +21,17 @@ blurred = cv2.GaussianBlur(gray , (5,5), 0)
 edged = cv2.Canny(blurred, 30, 150)
 
 cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+print('=====')
+print(cnts)
+print(type(cnts)) #tuple
 cnts = imutils.grab_contours(cnts)
-cnts = sort_contours(cnts , method= 'left-to-right')
-
+print('=====')
+print(cnts)
+print(type(cnts)) #tuple
+cnts = sort_contours(cnts , method= 'left-to-right')[0]
+print('=====')
+print(cnts)
+print(type(cnts)) #tuple
 chars = []
 
 for c in cnts:
@@ -36,16 +44,33 @@ for c in cnts:
         if tW > tH:
             thresh = imutils.resize(thresh, width = 28)
         else:
-            thresh = imutils.resise(thresh , height = 28)
-    (tH, tW) = thresh.shape
-    dX = int(max(0,32 - tW) / 2.0)
-    dY = int(max(0,32 - tH) / 2.0)
-    padded = cv2.copyMakeBorder(thresh , top = dY, bottom = dY, left = dX , right = dX, borderType = cv2.BORDER_CONSTANT , value = (0,0,0))
-    padded = cv2.resize(padded, (28,28))
-    padded = padded.astype('float32') / 255.0
-    padded = np.expand_dims(padded , axis = -1)
-    chars.append((padded , (x,y,w,h)))
-    
+            thresh = imutils.resize(thresh , height = 28)
+        (tH, tW) = thresh.shape
+        print(thresh.shape)
+        print(type(thresh))
+        dX = int(max(0,32 - tW) / 2.0)
+        dY = int(max(0,32 - tH) / 2.0)
+        padded = cv2.copyMakeBorder(thresh , top = dY, bottom = dY, left = dX , right = dX, borderType = cv2.BORDER_CONSTANT , value = (0,0,0))
+        padded = cv2.resize(padded, (28,28))
+        padded = padded.astype('float32') / 255.0
+        padded = np.expand_dims(padded , axis = -1)
+        chars.append((padded , (x,y,w,h)))
+boxes = [b[1] for b in chars]
+chars = np.array([c[0] for c in chars], dtype="float32")
+# OCR the characters using our handwriting recognition model
+preds = model.predict(chars)
+
+label_names = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabdefghnqrt"
+label_list = [l for l in label_names]
+
+for (pred , (x,y,w,h)) in zip(preds, boxes):
+    i = np.argmax(pred)
+    prob = pred[i]
+    label = label_list[i]
+    cv2.rectangle(image, (x,y), (x + w , y + h), (0,255,0), 2)
+    cv2.putText(image , label , (x -10, y-10), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0,255,0),2)
+cv2.imshow("Image", image)
+cv2.waitKey(0)
 
 
     
