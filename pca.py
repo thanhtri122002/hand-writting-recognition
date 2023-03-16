@@ -68,3 +68,4 @@ ax.set_ylabel('PC2')
 ax.set_zlabel('PC3')
 ax.view_init(elev=20, azim=45) # adjust viewing angle
 plt.show()
+print("done")
