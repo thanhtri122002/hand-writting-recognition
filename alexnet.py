@@ -10,17 +10,18 @@ from keras.models import  load_model , Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import  BatchNormalization , Concatenate , Conv2D , Dense , Dropout , Flatten , GlobalAveragePooling2D , Input , Lambda, ZeroPadding2D , MaxPooling2D
 
-path_train = r'C:\Users\ASUS\Desktop\project-computer\emnist-balanced-train.csv'
-path_test = r'C:\Users\ASUS\Desktop\project-computer\emnist-balanced-test.csv'
+path_train = r'.\dataset\emnist-balanced-train.csv'
+path_test = r'.\dataset\emnist-balanced-test.csv'
 
 list_paths = [path_train, path_test]
-path_map = r'C:\Users\ASUS\Desktop\project-computer\emnist-balanced-mapping.txt'
+path_map = r'.\dataset\emnist-balanced-mapping.txt'
 label_map = pd.read_csv(path_map, delimiter = ' ', index_col=0, header=None, squeeze=True) 
 
 label_dictionary = {}
 for index, label in enumerate(label_map):
     label_dictionary[index] = chr(label)
-
+class Preprocess():
+    pass
 def extract_dataset(list_paths):
     list_datasets = []
     X_set = []
@@ -122,14 +123,14 @@ if __name__ == "__main__":
     print(y_train.shape)
     print(y_test.shape)
     #create the model
-    """model = define_model_alexnet()
+    model = define_model_alexnet()
     model.compile(loss = 'categorical_crossentropy' , optimizer = 'adam' , metrics = ['accuracy'])
     callbacks = [EarlyStopping(monitor='val_loss', patience=3),
                 ModelCheckpoint(filepath='best_model.h5', monitor='val_loss', save_best_only=True)]
     #train the model
-    train = model.fit(X_train, y_train, epochs=20, validation_data=(X_test, y_test), callbacks=callbacks)"""
+    train = model.fit(X_train, y_train, epochs=20, validation_data=(X_test, y_test), callbacks=callbacks)
 
-    model = load_model('best_model.h5')
+    
     #evaluating the model
     scores = model.evaluate(X_test,y_test, verbose = 0)
    
