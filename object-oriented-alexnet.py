@@ -8,6 +8,8 @@ from keras.utils import to_categorical
 from keras.models import load_model, Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers import BatchNormalization, Concatenate, Conv2D, Dense, Dropout, Flatten, GlobalAveragePooling2D, Input, Lambda, ZeroPadding2D, MaxPooling2D
+from sklearn.svm import SVC
+import joblib
 HEIGHT = WIDTH = 28
 path_train = r'.\dataset\emnist-balanced-train.csv'
 path_test = r'.\dataset\emnist-balanced-test.csv'
@@ -100,15 +102,29 @@ class AlexNet:
         
         model = Model(inputs = input, outputs = x)
         return model
-class SVM:
-    def __init__(self,HEIGHT, WIDTH):
+    def train_model(self):
+        model = self.define_model()
+        model.compile(loss='categorical_crossentropy',
+                        optimizer='adam', metrics=['accuracy'])
+        callbacks = [EarlyStopping(monitor='val_loss', patience=3),
+                    ModelCheckpoint(filepath='alexnet_emnist.h5', monitor='val_loss', save_best_only=True)]
+        #train the model
+        train = model.fit(X_train, y_train, epochs=20, validation_data=(
+            X_test, y_test), callbacks=callbacks)
+    def predict_model(self):
+        pass
+   
+    
+class Lenet:
+    def __init__(self, HEIGHT,WIDTH, n_outputs):
         self.HEIGHT = HEIGHT
         self.WIDTH = WIDTH
-    
-    def use_svm(self):
+        self.n_outputs = n_outputs
+    def define_model(self):
+        pass
 
-class visualize:
-    pass
+
+
 class Evaluation_model:
     def __init__(self, *args, **kwargs):
         pass
@@ -128,9 +144,65 @@ if __name__ =="__main__":
 
     y_train = y_set[0]
     y_test = y_set[1]
-
+    while True:
+        print("menu choose the model")
+        print("1.Alexnet")
+        print("2.svm with kernel linear")
+        choice = int(input("choose model to train: "))
+        if choice ==1:
     #train the model
-    model = AlexNet(HEIGHT= HEIGHT , WIDTH= WIDTH , n_outputs= no_classes)
+            model = AlexNet(HEIGHT= HEIGHT , WIDTH= WIDTH , n_outputs= no_classes)
+            model.train_model()
+            y_pred = model.predict(X_test)
+            accuracy = accuracy_score(y_test,y_pred)
+        if choice == 2:
+            
+            pass
+        else:
+            break
 
 
 
+
+
+"""
+class DataVisualizer:
+    def __init__(self, X_train, y_train, X_test, y_test, label_map):
+        self.X_train = X_train
+        self.y_train = y_train
+        self.X_test = X_test
+        self.y_test = y_test
+        self.label_map = label_map
+
+    def plot_images(self, X, y, n_rows=4, n_cols=4):
+        fig, axes = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(10,10))
+        for i, ax in enumerate(axes.flat):
+            if i < len(X):
+                ax.imshow(X[i].reshape(HEIGHT, WIDTH), cmap='gray')
+                ax.set_title(f"Label: {self.label_map[np.argmax(y[i])]}", fontsize=12)
+            ax.axis('off')
+        plt.show()
+
+    def plot_class_distribution(self, y, title=None):
+        labels = [self.label_map[i] for i in range(len(self.label_map))]
+        class_counts = [sum(y[:, i]) for i in range(y.shape[1])]
+        fig, ax = plt.subplots(figsize=(8,6))
+        sns.barplot(x=labels, y=class_counts, ax=ax)
+        ax.set_title(title or 'Class Distribution', fontsize=14)
+        ax.set_xlabel('Class', fontsize=12)
+        ax.set_ylabel('Count', fontsize=12)
+        ax.tick_params(axis='x', labelrotation=90)
+        plt.show()
+
+    def visualize_data(self, n_rows=4, n_cols=4):
+        print("Visualizing training data")
+        self.plot_images(self.X_train, self.y_train, n_rows, n_cols)
+        self.plot_class_distribution(self.y_train)
+
+        print("Visualizing test data")
+        self.plot_images(self.X_test, self.y_test, n_rows, n_cols)
+        self.plot_class_distribution(self.y_test)
+
+        
+
+"""
