@@ -4,6 +4,8 @@ import numpy as np
 import argparse
 import imutils
 import cv2
+import joblib
+import os
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-i','--image',required= True, help = "path to input the image")
