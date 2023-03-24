@@ -112,10 +112,11 @@ class AlexNet:
         self.train = model.fit(X_train, y_train, epochs=20, validation_data=(
             X_test, y_test), callbacks=callbacks)
     def predict_model(self):
-        return self.model.predict()
+        return self.model.predict(X_test)
+    def load(self, filename):
+        return load_model(filename)
         
    
-    
 class Lenet:
     def __init__(self, HEIGHT,WIDTH, n_outputs):
         self.HEIGHT = HEIGHT
@@ -154,35 +155,93 @@ class Lenet:
 
         self.model.fit(data_augmentation.flow(X_train,y_train), epochs=20,
                   validation_data=(X_test, y_test), verbose=1,callbacks=callbacks)
-
+    def predict_model(self):
+        return self.model.predict(X_test)
     def load(self, filename):
         return load_model(filename)
+    
+    
+class VGG16:
+    def __init__(self,HEIGHT,WIDTH, n_outputs):
+        self.HEIGHT = HEIGHT
+        self.WIDTH = WIDTH
+        self.n_outputs = n_outputs
+        self.model = None
+    def define_model(self):
+        input = Input(shape = (self.HEIGHT,self.WIDTH, 1))
+        x = Conv2D(filters= 64, kernel_size= 3, padding='same', activation= 'relu', name='conv1')(input)
+        x = Conv2D(filters= 64, kernel_size= 3 , padding='same', activation='relu', name='conv2')(x)
+        x = MaxPooling2D(pool_size=2, strides= 2, name='pool1')(x)
+        x = BatchNormalization()(x)
 
+        x = Conv2D(filters= 128 , kernel_size= 3, padding= 'same', activation= 'relu', name='conv3')(x)
+        x = Conv2D(filters= 128, kernel_size= 3, padding= 'same', activation= 'relu', name='conv4')(x)
+        x = MaxPooling2D(pool_size= 2 , strides= 2 , name='pool2')(x)
+        x = BatchNormalization()(x)
+
+        x = Conv2D(filters= 256 , kernel_size= 3, padding= 'same', activation='relu', name='conv5')(x)
+        x = Conv2D(filters= 256 , kernel_size= 3, padding= 'same', activation='relu', name='conv6')(x)
+        x = Conv2D(filters= 256 , kernel_size= 3, padding= 'same', activation='relu', name='conv7')(x)
+        x = MaxPooling2D(pool_size= 2 , strides= 2 , name='pool3')(x)
+        x = BatchNormalization()(x)
+
+        x = Conv2D(filters= 512, kernel_size= 3 , padding= 'same', activation='relu', name='conv8')(x)
+        x = Conv2D(filters= 512, kernel_size= 3 , padding= 'same', activation='relu', name='conv9')(x)
+        x = Conv2D(filters= 512, kernel_size= 3 , padding= 'same', activation='relu', name='conv10')(x)
+        x = MaxPooling2D(pool_size= 2, strides=2, name='pool4')(x)
+        x = BatchNormalization()(x)
+
+        x = Conv2D(filters= 512, kernel_size= 3, padding='same', activation='relu', name='con11')(x)
+        x = Conv2D(filters= 512, kernel_size= 3, padding='same', activation='relu', name='con12')(x)
+        x = Conv2D(filters= 512, kernel_size= 3, padding='same', activation='relu', name='con13')(x)
+       
+        x = BatchNormalization()(x)
+
+        x = Flatten()(x)
+        x = Dense(units=4096, activation='relu')(x)
+        x = Dense(units=4096, activation='relu')(x)
+        x = Dense(units=self.n_outputs, activation='softmax')(x)
+
+        model = Model(inputs=input, outputs=x)
+        return model
+    def train_model(self):
+        self.model = self.define_model()
+        data_augmentation = ImageDataGenerator(
+            rotation_range=10,
+            width_shift_range=0.1,
+            height_shift_range=0.1,
+            zoom_range=0.1
+        )  
+
+        data_augmentation.flow(X_train, y_train)
+       
+        callbacks = [EarlyStopping(monitor='val_loss', patience=3),
+                     ModelCheckpoint(filepath='vgg16.h5', monitor='val_loss', save_best_only=True)]
+        self.model.compile(loss='categorical_crossentropy',
+                    optimizer='adam', metrics=['accuracy'])
+
+        self.model.fit(data_augmentation.flow(X_train,y_train), epochs=20,
+                  validation_data=(X_test, y_test), verbose=1,callbacks=callbacks)
+    def predict_model(self):
+        return self.model.predict(X_test)
+    def load(self, filename):
+        return load_model(filename)
+    
 class Evaluation_model:
-    def __init__(self, filename,y_pred,y_test):
-        self.filename = filename
+    def __init__(self, y_pred,y_test):
         self.y_pred = y_pred
         self.y_test = y_test
     def evaluate(self):
-        model = load_model(self.filename)
-        acc = accuracy_score(self.y_test, self.y_pred)
-        prec = precision_score(self.y_test, self.y_pred, average = 'macro')
-        rec = recall_score(self.y_test, self.y_pred, average = 'macro')
-        f1 = f1_score(self.y_test, self.y_pred, average = 'macro')
+        acc = accuracy_score(y_test, y_pred)
+        prec = precision_score(y_test, y_pred, average = 'macro')
+        rec = recall_score(y_test, y_pred, average = 'macro')
+        f1 = f1_score(y_test, y_pred, average = 'macro')
         print(f"Accuracy: {acc}")
         print(f"Precision: {prec}")
         print(f"Recall: {rec}")
         print(f"F1-score: {f1}")
         data = {"Metrics":['Accuracy', 'Precision', 'Recall', 'F1-score'],
                 "Values": [acc,prec,rec,f1]}
-        df = pd.DataFrame(data = data)
-        plt.bar(df["Metrics"],df['Values'])
-        plt.title('Evaluation Metrics')
-        plt.xlabel('Metric')
-        plt.ylabel('Score')
-        for i , v in enumerate(df['Values']):
-            plt.text(i, v, f"{v:.2f}", ha='left', va='center')
-        plt.show()
         # Plotting and showing the confusion matrix
         cm = confusion_matrix(self.y_test, self.y_pred)
         plt.imshow(cm, cmap="Blues")
@@ -211,24 +270,42 @@ if __name__ =="__main__":
         print("menu choose the model")
         print("1.Alexnet")
         print("2.Lenet")
+        print('3.vgg16')
+        print('4.evaluate alexnet')
+        print('5.evaluate lenet5')
         choice = int(input("choose model to train: "))
         if choice ==1:
     #train the model
             model = AlexNet(HEIGHT= HEIGHT , WIDTH= WIDTH , n_outputs= no_classes)
             model.train_model()
-            y_pred = model.predict(X_test)
-            
+    
+
         if choice == 2:
-           
             model = Lenet(HEIGHT= HEIGHT , WIDTH= WIDTH , n_outputs= no_classes)
             model.train_model()
-            model.save()
+          
         if choice == 3:
-            filename = input('Type file name: ')
-            model = load_model(filename)
-            y_pred = np.argmax(y_pred, axis = 1)
+            model = VGG16(HEIGHT= HEIGHT , WIDTH= WIDTH , n_outputs= no_classes)
+            model.train_model()
+           
+        if choice == 4:
+        
+            y_pred = model.predict(X_test)
+            y_pred = np.argmax(y_pred,axis = 1)
             y_test = np.argmax(y_test, axis = 1)
-            evaluator = Evaluation_model(filename,y_pred,y_test)
+            evaluator = Evaluation_model(y_pred,y_test)
+            evaluator.evaluate()
+            
+
+        if choice == 5:
+            filename = "lent5_emnist.h5"
+            model = load_model(filename)
+            y_pred = model.predict(X_test)
+            y_pred = np.argmax(y_pred,axis = 1)
+            y_test = np.argmax(y_test, axis = 1)
+            evaluator = Evaluation_model(y_pred,y_test)
+            evaluator.evaluate()
+
         else:
             break
 
