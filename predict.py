@@ -17,26 +17,23 @@ model = load_model(args['model'])
 image = cv2.imread(args["image"])
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#cv2.imshow("gray",gray)
 
 blurred = cv2.GaussianBlur(gray , (5,5), 0)
 
+
 edged = cv2.Canny(blurred, 30, 150)
+#cv2.imshow('edged',edged)
 
 
 cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
 
-print('=====')
-print(cnts)
-print(type(cnts)) #tuple
+
 cnts = imutils.grab_contours(cnts)
-print('=====')
-print(cnts)
-print(type(cnts)) #tuple
+
 #output the sorted contours and the corresponding bounding boxes
 cnts = sort_contours(cnts , method= 'left-to-right')[0]
-print('=====')
-print(cnts)
-print(type(cnts)) #tuple
+
 chars = []
 
 for i,c in enumerate(cnts):
@@ -44,7 +41,7 @@ for i,c in enumerate(cnts):
     if(w >=5 and w <=150) and (h>= 15 and h <=120):
         region_of_interest = gray[y : y + h , x : x+ w]
         thresh = cv2.threshold(region_of_interest, 0 , 255 , cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-        cv2.imshow(f'threshed {i}', thresh)
+        #cv2.imshow(f'threshed {i}', thresh)
         (tH, tW) = thresh.shape
         print('thresh shape')
         print(thresh.shape)#(46, 25)
@@ -53,7 +50,7 @@ for i,c in enumerate(cnts):
         else:
             thresh = imutils.resize(thresh , height = 28)
         (tH, tW) = thresh.shape
-        print(thresh.shape)#(28, 15)
+        #print(thresh.shape)#(28, 15)
        
         dX = int(max(0,32 - tW) / 2.0)
         dY = int(max(0,32 - tH) / 2.0)

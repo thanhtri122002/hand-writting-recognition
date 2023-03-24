@@ -109,8 +109,25 @@ class AlexNet:
         callbacks = [EarlyStopping(monitor='val_loss', patience=3),
                     ModelCheckpoint(filepath='alexnet_emnist.h5', monitor='val_loss', save_best_only=True)]
         #train the model
-        self.train = model.fit(X_train, y_train, epochs=20, validation_data=(
+        history =  self.model.fit(X_train, y_train, epochs=20, validation_data=(
             X_test, y_test), callbacks=callbacks)
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy alexnet')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'validation'], loc='upper left')
+        plt.show()
+
+        # plot loss
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss alexnet')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'validation'], loc='upper left')
+        plt.show()
+        return history
     def predict_model(self):
         return self.model.predict(X_test)
     def load(self, filename):
@@ -125,7 +142,7 @@ class Lenet:
         self.model = None
     def define_model(self):
         input = Input(shape = (self.HEIGHT,self.WIDTH ,1))
-
+        
         x = Conv2D(filters = 32 , kernel_size = 5 , padding = 'same', activation= 'relu', name = 'conv1')(input)
         x = MaxPooling2D(strides=2,name ='maxpool1')(x)
 
@@ -153,8 +170,25 @@ class Lenet:
         self.model.compile(loss='categorical_crossentropy',
                     optimizer='adam', metrics=['accuracy'])
 
-        self.model.fit(data_augmentation.flow(X_train,y_train), epochs=20,
+        history = self.model.fit(data_augmentation.flow(X_train,y_train), epochs=20,
                   validation_data=(X_test, y_test), verbose=1,callbacks=callbacks)
+        plt.plot(history.history['accuracy'])
+        plt.plot(history.history['val_accuracy'])
+        plt.title('model accuracy lenet 5')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'validation'], loc='upper left')
+        plt.show()
+
+        # plot loss
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss lenet 5')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'validation'], loc='upper left')
+        plt.show()
+        return history
     def predict_model(self):
         return self.model.predict(X_test)
     def load(self, filename):
@@ -220,8 +254,10 @@ class VGG16:
         self.model.compile(loss='categorical_crossentropy',
                     optimizer='adam', metrics=['accuracy'])
 
-        self.model.fit(data_augmentation.flow(X_train,y_train), epochs=20,
+        history = self.model.fit(data_augmentation.flow(X_train,y_train), epochs=20,
                   validation_data=(X_test, y_test), verbose=1,callbacks=callbacks)
+        return history
+            
     def predict_model(self):
         return self.model.predict(X_test)
     def load(self, filename):
@@ -289,7 +325,8 @@ if __name__ =="__main__":
             model.train_model()
            
         if choice == 4:
-        
+            filename = "alexnet_emnist.h5"
+            model = load_model(filename)
             y_pred = model.predict(X_test)
             y_pred = np.argmax(y_pred,axis = 1)
             y_test = np.argmax(y_test, axis = 1)
@@ -305,6 +342,22 @@ if __name__ =="__main__":
             y_test = np.argmax(y_test, axis = 1)
             evaluator = Evaluation_model(y_pred,y_test)
             evaluator.evaluate()
+            plt.plot(model.history['accuracy'])
+            plt.plot(model.history['val_accuracy'])
+            plt.title('model accuracy')
+            plt.ylabel('accuracy')
+            plt.xlabel('epoch')
+            plt.legend(['train', 'validation'], loc='upper left')
+            plt.show()
+
+            # plot loss
+            plt.plot(model.history['loss'])
+            plt.plot(model.history['val_loss'])
+            plt.title('model loss')
+            plt.ylabel('loss')
+            plt.xlabel('epoch')
+            plt.legend(['train', 'validation'], loc='upper left')
+            plt.show()
 
         else:
             break
