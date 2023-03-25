@@ -142,7 +142,7 @@ class Lenet:
         self.model = None
     def define_model(self):
         input = Input(shape = (self.HEIGHT,self.WIDTH ,1))
-        
+
         x = Conv2D(filters = 32 , kernel_size = 5 , padding = 'same', activation= 'relu', name = 'conv1')(input)
         x = MaxPooling2D(strides=2,name ='maxpool1')(x)
 
@@ -299,7 +299,8 @@ if __name__ =="__main__":
 
     X_train = X_set[0].reshape(-1,HEIGHT,WIDTH, 1)
     X_test = X_set[1].reshape(-1,HEIGHT,WIDTH , 1)
-
+    print( X_train.shape)
+    print(X_test.shape)
     y_train = y_set[0]
     y_test = y_set[1]
     while True:
@@ -327,6 +328,7 @@ if __name__ =="__main__":
         if choice == 4:
             filename = "alexnet_emnist.h5"
             model = load_model(filename)
+            model.summary()
             y_pred = model.predict(X_test)
             y_pred = np.argmax(y_pred,axis = 1)
             y_test = np.argmax(y_test, axis = 1)
@@ -337,6 +339,7 @@ if __name__ =="__main__":
         if choice == 5:
             filename = "lent5_emnist.h5"
             model = load_model(filename)
+            model.summary()
             y_pred = model.predict(X_test)
             y_pred = np.argmax(y_pred,axis = 1)
             y_test = np.argmax(y_test, axis = 1)
